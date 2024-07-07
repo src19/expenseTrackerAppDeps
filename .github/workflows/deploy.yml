@@ -1,0 +1,103 @@
+name: Deploy Microservices Stack to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ap-south-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Upload Kong config and plugins to S3
+        run: |
+          aws s3 mb s3://kong-config-${{ github.sha }} --region ${{ env.AWS_REGION }}
+          aws s3 cp kong/config/kong.yml s3://kong-config-${{ github.sha }}/kong.yml
+          aws s3 cp kong/custom-plugins s3://kong-config-${{ github.sha }}/custom-plugins --recursive
+
+      - name: Build, tag, and push Kong image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: kong
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker-compose -f kong/kong-compose.yml build
+          docker tag kong-service:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "kong_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Build, tag, and push MySQL image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: mysql
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker-compose -f mysql/mysql-compose.yml build
+          docker tag mysql:8.3.0 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "mysql_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Build, tag, and push Kafka image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: kafka
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker-compose -f kafka/kafka-compose.yml build
+          docker tag confluentinc/cp-kafka:7.4.4 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "kafka_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy CloudFormation stack
+        env:
+          VPC_ID: ${{ secrets.VPC_ID }}
+          SUBNET_1: ${{ secrets.SUBNET_1 }}
+          SUBNET_2: ${{ secrets.SUBNET_2 }}
+          AMI_ID: ${{ secrets.AMI_ID }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          KONG_IMAGE: ${{ steps.build-and-push-kong.outputs.kong_image }}
+          MYSQL_IMAGE: ${{ steps.build-and-push-mysql.outputs.mysql_image }}
+          KAFKA_IMAGE: ${{ steps.build-and-push-kafka.outputs.kafka_image }}
+          KONG_CONFIG_BUCKET: kong-config-${{ github.sha }}
+        run: |
+          aws cloudformation deploy \
+            --template-file cloudformation-template.yaml \
+            --stack-name microservices-stack \
+            --parameter-overrides \
+              VPC=${VPC_ID} \
+              Subnets=${SUBNET_1},${SUBNET_2} \
+              AMI=${AMI_ID} \
+              MySQLRootPassword=${MYSQL_ROOT_PASSWORD} \
+              MySQLUser=${MYSQL_USER} \
+              MySQLPassword=${MYSQL_PASSWORD} \
+              KongImage=${KONG_IMAGE} \
+              MySQLImage=${MYSQL_IMAGE} \
+              KongConfigBucket=${KONG_CONFIG_BUCKET} \
+              KafkaImage=${KAFKA_IMAGE} \
+            --capabilities CAPABILITY_IAM
+
+      - name: Output CloudFormation stack info
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name microservices-stack \
+            --query 'Stacks[].Outputs[]' \
+            --output table
