@@ -16,12 +16,14 @@ Parameters:
     NoEcho: true
   MySQLUser:
     Type: String
+  MySQLRootUser:
+      Type: String
   MySQLPassword:
     Type: String
     NoEcho: true
   KafkaAdvertisedListeners:
     Type: String
-    Default: PLAINTEXT://${AWS::NetworkInterfaces[0].PrivateIpAddress}:9092
+    Default: PLAINTEXT://!Ref 'AWS::NoValue':9092
   KongConfigBucket:
     Type: String
     Description: S3 bucket containing Kong configuration and plugins
@@ -133,6 +135,7 @@ Resources:
                 environment:
                   MYSQL_ROOT_PASSWORD: ${MySQLRootPassword}
                   MYSQL_USER: ${MySQLUser}
+                  MYSQL_ROOT_USER: ${MySQLRootUser}
                   MYSQL_PASSWORD: ${MySQLPassword}
                 volumes:
                   - /data/mysql:/var/lib/mysql
@@ -160,7 +163,7 @@ Resources:
                 environment:
                   KAFKA_BROKER_ID: 1
                   KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-                  KAFKA_ADVERTISED_LISTENERS: ${KafkaAdvertisedListeners}
+                  KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://$INSTANCE_IP:9092
                   KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
                   KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
                   KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1

@@ -73,6 +73,7 @@ jobs:
           AMI_ID: ${{ secrets.AMI_ID }}
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_ROOT_USER: ${{ secrets.MYSQL_ROOT_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           KONG_IMAGE: ${{ steps.build-and-push-kong.outputs.kong_image }}
           MYSQL_IMAGE: ${{ steps.build-and-push-mysql.outputs.mysql_image }}
@@ -88,6 +89,7 @@ jobs:
               AMI=${AMI_ID} \
               MySQLRootPassword=${MYSQL_ROOT_PASSWORD} \
               MySQLUser=${MYSQL_USER} \
+              MySQLRootUser=${MYSQL_ROOT_USER} \
               MySQLPassword=${MYSQL_PASSWORD} \
               KongImage=${KONG_IMAGE} \
               MySQLImage=${MYSQL_IMAGE} \
