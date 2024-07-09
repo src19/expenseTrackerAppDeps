@@ -108,7 +108,7 @@ Resources:
             version: '3.3'
             services:
               kong-service:
-                image: kong:latest
+                image: ${KongImage}
                 volumes:
                   - "./config:/usr/local/kong/declarative"
                   - "./custom-plugins:/usr/local/share/lua/5.1/kong/plugins"
