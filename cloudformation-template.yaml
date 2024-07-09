@@ -27,6 +27,9 @@ Parameters:
   KongConfigBucket:
     Type: String
     Description: S3 bucket containing Kong configuration and plugins
+  KongImage:
+    Type: String
+    Description: Kong image built in github actions
 
 Resources:
   ServiceDiscoveryNamespace:
