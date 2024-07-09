@@ -84,8 +84,8 @@ Resources:
             chmod +x /usr/local/bin/docker-compose
             
             mkdir -p /app/kong/config /app/kong/custom-plugins
-            aws s3 cp s3://${KongConfigBucket}/kong.yml /app/kong/config/kong.yml
-            aws s3 cp s3://${KongConfigBucket}/custom-plugins/ /app/kong/custom-plugins/ --recursive
+            aws s3 ls s3://${KongConfigBucket}/kong.yml || aws s3 cp s3://${KongConfigBucket}/kong.yml /app/kong/config/kong.yml
+            aws s3 ls s3://${KongConfigBucket}/custom-plugins/ || aws s3 cp s3://${KongConfigBucket}/custom-plugins/ /app/kong/custom-plugins/ --recursive
             
             # Install AWS CLI
             yum install -y aws-cli
