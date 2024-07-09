@@ -45,8 +45,8 @@ jobs:
       - name: Upload Kong config and plugins to S3
         run: |
           aws s3 mb s3://kong-config-${{ github.sha }} --region ${{ env.AWS_REGION }}
-          aws s3 cp kong/config/kong.yml s3://kong-config-${{ github.sha }}/kong.yml
-          aws s3 cp kong/custom-plugins s3://kong-config-${{ github.sha }}/custom-plugins --recursive
+          aws s3 ls kong/config/kong.yml || aws s3 cp kong/config/kong.yml s3://kong-config-${{ github.sha }}/kong.yml
+          aws s3 ls kong/custom-plugins || aws s3 cp kong/custom-plugins s3://kong-config-${{ github.sha }}/custom-plugins --recursive
 
       - name: Deploy CloudFormation stack
         env:
