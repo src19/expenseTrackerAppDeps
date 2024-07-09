@@ -9,3 +9,5 @@ E
 services.yml,7/2/724f746a63032c022071eab6e3e482a6ad4d9f8e
 G
 mysql/mysql-compose.yml,8/4/84ebf371ff3d31f5c25ff359b530899a68ceb58f
+G
+kafka/kafka-compose.yml,0/e/0ec0d8e37164bdb0d021902b5b5a57e9bddd42fc

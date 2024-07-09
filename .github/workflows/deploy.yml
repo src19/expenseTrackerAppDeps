@@ -38,7 +38,7 @@ jobs:
           ECR_REPOSITORY: kong
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker-compose -f kong/kong-compose.yml build
+          docker compose -f kong/kong-compose.yml build
           docker tag kong-service:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "kong_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
@@ -49,7 +49,7 @@ jobs:
           ECR_REPOSITORY: mysql
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker-compose -f mysql/mysql-compose.yml build
+          docker compose -f mysql/mysql-compose.yml build
           docker tag mysql:8.3.0 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "mysql_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
@@ -60,7 +60,7 @@ jobs:
           ECR_REPOSITORY: kafka
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker-compose -f kafka/kafka-compose.yml build
+          docker compose -f kafka/kafka-compose.yml build
           docker tag confluentinc/cp-kafka:7.4.4 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "kafka_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
