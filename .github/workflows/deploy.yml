@@ -53,7 +53,7 @@ jobs:
           fi
           
           echo "Uploading Kong configuration and plugins to S3"
-          aws s3 cp kong/config/kong.yml s3://kong-config-${{ github.sha }}/kong.yml
+          aws s3 cp kong/config/kong.yml s3://kong-config-${{ github.sha }} --recursive
           aws s3 cp kong/custom-plugins s3://kong-config-${{ github.sha }}/custom-plugins --recursive
 
       - name: Deploy CloudFormation stack
