@@ -45,16 +45,16 @@ jobs:
 
       - name: Upload Kong config and plugins to S3
         run: |
-          BUCKET_NAME="kong-config-${{ github.sha }}"
+          BUCKET_NAME="kong-config"
           if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
-            aws s3 mb s3://kong-config-${{ github.sha }} --region ${{ env.AWS_REGION }}
+            aws s3 mb s3://kong-config --region ${{ env.AWS_REGION }}
           else
             echo "Bucket $BUCKET_NAME already exists"
           fi
           
           echo "Uploading Kong configuration and plugins to S3"
-          aws s3 cp kong/config/kong.yml s3://kong-config-${{ github.sha }} --recursive
-          aws s3 cp kong/custom-plugins s3://kong-config-${{ github.sha }}/custom-plugins --recursive
+          aws s3 cp kong/config/kong.yml s3://kong-config/kong.yml
+          aws s3 cp kong/custom-plugins s3://kong-config/custom-plugins --recursive
 
       - name: Deploy CloudFormation stack
         env:
@@ -67,7 +67,7 @@ jobs:
           MYSQL_ROOT_USER: ${{ secrets.MYSQL_ROOT_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           KONG_IMAGE: ${{ steps.build-kong.kong_image }}
-          KONG_CONFIG_BUCKET: kong-config-${{ github.sha }}
+          KONG_CONFIG_BUCKET: kong-config
         run: |
           aws cloudformation deploy \
             --template-file cloudformation-template.yaml \
