@@ -13,3 +13,8 @@ G
 kafka/kafka-compose.yml,0/e/0ec0d8e37164bdb0d021902b5b5a57e9bddd42fc
 ?
 kong/Dockerfile,3/b/3bff3fd5ca93b95bac451382af1ddf8c45226fb6
+[
++kong/custom-plugins/custom-auth/handler.lua,1/5/15a6209353f76f264bfbf5faf4ab766d4bf3cadc
+:
+
+.gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
