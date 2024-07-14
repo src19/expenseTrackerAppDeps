@@ -9,7 +9,7 @@ Parameters:
   InstanceType:
     Type: String
     Default: t3.medium
-  VPC_CIDR:
+  VPCCIDR:
     Type: String
     Description: The CIDR block for the VPC
   AMI:
@@ -222,11 +222,11 @@ Resources:
         - IpProtocol: udp
           FromPort: 53
           ToPort: 53
-          CidrIp: !Ref VPC_CIDR
+          CidrIp: !Ref VPCCIDR
         - IpProtocol: tcp
           FromPort: 53
           ToPort: 53
-          CidrIp: !Ref VPC_CIDR
+          CidrIp: !Ref VPCCIDR
 
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup

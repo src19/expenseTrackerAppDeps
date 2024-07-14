@@ -75,7 +75,7 @@ jobs:
             --stack-name microservices-stack \
             --parameter-overrides \
               VPC=${VPC_ID} \
-              VPC_CIDR=${VPC_CIDR} \
+              VPCCIDR=${VPC_CIDR} \
               Subnets=${SUBNET_1},${SUBNET_2} \
               AMI=${AMI_ID} \
               MySQLRootPassword=${MYSQL_ROOT_PASSWORD} \
