@@ -56,7 +56,7 @@ jobs:
           KONG_CONFIG_BUCKET: kong-config-${{ github.sha }}
         run: |
           aws cloudformation deploy \
-            --template-file microservices-template.yaml \
+            --template-file  cloudformation-template-deps.yaml \
             --stack-name microservices-stack \
             --parameter-overrides \
               VPC=${VPC_ID} \
