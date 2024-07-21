@@ -24,3 +24,5 @@ G
 +.github/workflows/deploy-infrastructure.yml,3/2/321e1f2619b231d953b8f8a9af288f58f06f08dd
 Q
 !.github/workflows/deploy-deps.yml,2/5/2577643ea1e93d0528acc789c2aee3a25a38d064
+D
+kong/config/kong.yml,1/1/115d7911a34c0bf588922095f241f6f36469d019

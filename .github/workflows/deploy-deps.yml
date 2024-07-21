@@ -1,9 +1,9 @@
 name: Deploy Microservices
 
-#on:
-#  push:
-#    branches:
-#      - main
+on:
+  push:
+    branches:
+      - main
 
 env:
   AWS_REGION: ap-south-1
@@ -22,27 +22,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Create ECR repository if not exists
-        env:
-          ECR_REPOSITORY: kong
-        run: |
-          aws ecr describe-repositories --repository-names ${ECR_REPOSITORY} || aws ecr create-repository --repository-name ${ECR_REPOSITORY}
-
-      - name: Build and push Kong image to Amazon ECR
-        id: build-kong
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: kong
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./kong
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "kong_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
       - name: Upload Kong config and plugins to S3
         run: |
           BUCKET_NAME="kong-config-${{github.sha}}"
@@ -57,8 +36,10 @@ jobs:
           aws s3 cp kong/custom-plugins s3://$BUCKET_NAME/custom-plugins --recursive
 
       - name: Download infrastructure outputs from S3
+        env:
+          BUCKET_NAME: "expensetrackerinfra"
         run: |
-          aws s3 cp s3://expensetrackerinfra/infrastructure-outputs.json infrastructure-outputs.json
+          aws s3 cp s3://$BUCKET_NAME/infrastructure-outputs.json infrastructure-outputs.json
           cat infrastructure-outputs.json
 
       - name: Deploy Microservices Stack

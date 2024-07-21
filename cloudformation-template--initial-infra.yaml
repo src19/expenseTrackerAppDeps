@@ -130,7 +130,7 @@ Resources:
   PrivateRouteTableTwo:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref 'VPC'
+      VpcId: !Ref VPC
   PrivateRouteTwo:
     Type: AWS::EC2::Route
     Properties:
@@ -162,9 +162,9 @@ Resources:
         - Key: idle_timeout.timeout_seconds
           Value: '30'
       Subnets:
-        - !Ref 'PublicSubnetOne'
-        - !Ref 'PublicSubnetTwo'
-      SecurityGroups: [!Ref 'PublicLoadBalancerSG']
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
+      SecurityGroups: [!Ref PublicLoadBalancerSG]
   # A dummy target group is used to setup the ALB to just drop traffic
   # initially, before any real service target groups have been added.
   DummyTargetGroupPublic:
