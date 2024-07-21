@@ -18,3 +18,9 @@ G
 :
 
 .gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
+[
++cloudformation-template--initial-infra.yaml,7/5/753df15e61c17e2bce19bf04da691f62061028eb
+[
++.github/workflows/deploy-infrastructure.yml,3/2/321e1f2619b231d953b8f8a9af288f58f06f08dd
+Q
+!.github/workflows/deploy-deps.yml,2/5/2577643ea1e93d0528acc789c2aee3a25a38d064
