@@ -1,78 +1,78 @@
-name: Deploy Microservices
-
-on:
-  push:
-    branches:
-      - main
-
-env:
-  AWS_REGION: ap-south-1
-
-jobs:
-  deploy-microservices:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Upload Kong config and plugins to S3
-        run: |
-          BUCKET_NAME="kong-config-${{github.sha}}"
-          if ! aws s3api head-bucket --bucket "$BUCKET_NAME"; then
-            aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
-          else
-            echo "Bucket $BUCKET_NAME already exists"
-          fi
-          
-          echo "Uploading Kong configuration and plugins to S3"
-          aws s3 cp kong/config/kong.yml s3://$BUCKET_NAME/kong.yml
-          aws s3 cp kong/custom-plugins s3://$BUCKET_NAME/custom-plugins --recursive
-
-      - name: Download infrastructure outputs from S3
-        env:
-          BUCKET_NAME: "expensetrackerinfra"
-        run: |
-          aws s3 cp s3://$BUCKET_NAME/infrastructure-outputs.json infrastructure-outputs.json
-          cat infrastructure-outputs.json
-
-      - name: Deploy Microservices Stack
-        env:
-          VPC_ID: $(jq -r '.[] | select(.OutputKey=="VpcId") | .OutputValue' infrastructure-outputs.json)
-          SUBNET_1: $(jq -r '.[] | select(.OutputKey=="PublicSubnetOne") | .OutputValue' infrastructure-outputs.json)
-          SUBNET_2: $(jq -r '.[] | select(.OutputKey=="PublicSubnetTwo") | .OutputValue' infrastructure-outputs.json)
-          ECS_CLUSTER_NAME: $(jq -r '.[] | select(.OutputKey=="ECSClusterName") | .OutputValue' infrastructure-outputs.json)
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_ROOT_USER: ${{ secrets.MYSQL_ROOT_USER }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          KONG_IMAGE: ${{ steps.build-kong.outputs.kong_image }}
-          KONG_CONFIG_BUCKET: kong-config-${{ github.sha }}
-        run: |
-          aws cloudformation deploy \
-            --template-file  cloudformation-template-deps.yaml \
-            --stack-name microservices-stack \
-            --parameter-overrides \
-              VPC=${VPC_ID} \
-              Subnets=${SUBNET_1},${SUBNET_2} \
-              ECSClusterName=${ECS_CLUSTER_NAME} \
-              MySQLRootPassword=${MYSQL_ROOT_PASSWORD} \
-              MySQLUser=${MYSQL_USER} \
-              MySQLRootUser=${MYSQL_ROOT_USER} \
-              MySQLPassword=${MYSQL_PASSWORD} \
-              KongImage=${KONG_IMAGE} \
-              KongConfigBucket=${KONG_CONFIG_BUCKET} \
-            --capabilities CAPABILITY_NAMED_IAM
-
-      - name: Output Microservices Stack Info
-        run: |
-          aws cloudformation describe-stacks \
-            --stack-name microservices-stack \
-            --query 'Stacks[].Outputs[]' \
-            --output table
+#name: Deploy Microservices
+#
+#on:
+#  push:
+#    branches:
+#      - main
+#
+#env:
+#  AWS_REGION: ap-south-1
+#
+#jobs:
+#  deploy-microservices:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ${{ env.AWS_REGION }}
+#
+#      - name: Upload Kong config and plugins to S3
+#        run: |
+#          BUCKET_NAME="kong-config-${{github.sha}}"
+#          if ! aws s3api head-bucket --bucket "$BUCKET_NAME"; then
+#            aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
+#          else
+#            echo "Bucket $BUCKET_NAME already exists"
+#          fi
+#
+#          echo "Uploading Kong configuration and plugins to S3"
+#          aws s3 cp kong/config/kong.yml s3://$BUCKET_NAME/kong.yml
+#          aws s3 cp kong/custom-plugins s3://$BUCKET_NAME/custom-plugins --recursive
+#
+#      - name: Download infrastructure outputs from S3
+#        env:
+#          BUCKET_NAME: "expensetrackerinfra"
+#        run: |
+#          aws s3 cp s3://$BUCKET_NAME/infrastructure-outputs.json infrastructure-outputs.json
+#          cat infrastructure-outputs.json
+#
+#      - name: Deploy Microservices Stack
+#        env:
+#          VPC_ID: $(jq -r '.[] | select(.OutputKey=="VpcId") | .OutputValue' infrastructure-outputs.json)
+#          SUBNET_1: $(jq -r '.[] | select(.OutputKey=="PublicSubnetOne") | .OutputValue' infrastructure-outputs.json)
+#          SUBNET_2: $(jq -r '.[] | select(.OutputKey=="PublicSubnetTwo") | .OutputValue' infrastructure-outputs.json)
+#          ECS_CLUSTER_NAME: $(jq -r '.[] | select(.OutputKey=="ECSClusterName") | .OutputValue' infrastructure-outputs.json)
+#          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+#          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+#          MYSQL_ROOT_USER: ${{ secrets.MYSQL_ROOT_USER }}
+#          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+#          KONG_IMAGE: ${{ steps.build-kong.outputs.kong_image }}
+#          KONG_CONFIG_BUCKET: kong-config-${{ github.sha }}
+#        run: |
+#          aws cloudformation deploy \
+#            --template-file  cloudformation-template-deps.yaml \
+#            --stack-name microservices-stack \
+#            --parameter-overrides \
+#              VPC=${VPC_ID} \
+#              Subnets=${SUBNET_1},${SUBNET_2} \
+#              ECSClusterName=${ECS_CLUSTER_NAME} \
+#              MySQLRootPassword=${MYSQL_ROOT_PASSWORD} \
+#              MySQLUser=${MYSQL_USER} \
+#              MySQLRootUser=${MYSQL_ROOT_USER} \
+#              MySQLPassword=${MYSQL_PASSWORD} \
+#              KongImage=${KONG_IMAGE} \
+#              KongConfigBucket=${KONG_CONFIG_BUCKET} \
+#            --capabilities CAPABILITY_NAMED_IAM
+#
+#      - name: Output Microservices Stack Info
+#        run: |
+#          aws cloudformation describe-stacks \
+#            --stack-name microservices-stack \
+#            --query 'Stacks[].Outputs[]' \
+#            --output table
