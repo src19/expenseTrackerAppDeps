@@ -43,9 +43,9 @@ jobs:
           INFRA_FILE_NAME: "infrastructure-outputs.json"
         run: |
           if ! aws s3api head-bucket --bucket-name "$BUCKET_NAME"; then
-            aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }} 
+            aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
           else
-            echo "Bucket $BUCKET_NAME already exists" 
+            echo "Bucket $BUCKET_NAME already exists"
           fi
           echo "Uploading Bucket: $BUCKET_NAME"
           aws s3 cp ${INFRA_FILE_NAME} s3://${BUCKET_NAME}/infrastructure-outputs.json

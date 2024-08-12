@@ -81,11 +81,13 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: '0.0.0.0/0'
       GatewayId: !Ref InternetGateway
+
   PublicSubnetOneRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnetOne
       RouteTableId: !Ref PublicRouteTable
+
   PublicSubnetTwoRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -102,6 +104,7 @@ Resources:
     DependsOn: GatewayAttachement
     Properties:
       Domain: vpc
+
   NatGatewayOne:
     Type: AWS::EC2::NatGateway
     Properties:
@@ -112,6 +115,7 @@ Resources:
     Properties:
       AllocationId: !GetAtt NatGatewayTwoAttachment.AllocationId
       SubnetId: !Ref PublicSubnetTwo
+
   PrivateRouteTableOne:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -127,6 +131,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTableOne
       SubnetId: !Ref PrivateSubnetOne
+
   PrivateRouteTableTwo:
     Type: AWS::EC2::RouteTable
     Properties:
