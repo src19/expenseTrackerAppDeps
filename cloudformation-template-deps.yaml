@@ -181,10 +181,6 @@ Resources:
           PortMappings:
             - ContainerPort: 3306
               HostPort: 3306
-          Volumes:
-            - Name: mysql-data
-              Host:
-                SourcePath: /data/mysql
 
   KafkaTaskDefinition:
     Type: AWS::ECS::TaskDefinition
