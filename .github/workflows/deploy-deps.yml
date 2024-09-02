@@ -25,7 +25,7 @@
 #      - name: Upload Kong config and plugins to S3
 #        run: |
 #          BUCKET_NAME="kong-config-${{github.sha}}"
-#          if ! aws s3api head-bucket --bucket "$BUCKET_NAME"; then
+#          if !aws s3api head-bucket --bucket "$BUCKET_NAME"; then
 #            aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
 #          else
 #            echo "Bucket $BUCKET_NAME already exists"
@@ -45,9 +45,14 @@
 #      - name: Deploy Microservices Stack
 #        env:
 #          VPC_ID: $(jq -r '.[] | select(.OutputKey=="VpcId") | .OutputValue' infrastructure-outputs.json)
-#          SUBNET_1: $(jq -r '.[] | select(.OutputKey=="PublicSubnetOne") | .OutputValue' infrastructure-outputs.json)
-#          SUBNET_2: $(jq -r '.[] | select(.OutputKey=="PublicSubnetTwo") | .OutputValue' infrastructure-outputs.json)
-#          ECS_CLUSTER_NAME: $(jq -r '.[] | select(.OutputKey=="ECSClusterName") | .OutputValue' infrastructure-outputs.json)
+#          PUBLIC_SUBNET_1: $(jq -r '.[] | select(.OutputKey=="PublicSubnetOne") | .OutputValue' infrastructure-outputs.json)
+#          PUBLIC_SUBNET_2: $(jq -r '.[] | select(.OutputKey=="PublicSubnetTwo") | .OutputValue' infrastructure-outputs.json)
+#          PRIVATE_SUBNET_1: $(jq -r '.[] | select(.OutputKey=="PrivateSubnetOne") | .OutputValue' infrastructure-outputs.json)
+#          PRIVATE_SUBNET_2: $(jq -r '.[] | select(.OutputKey=="PrivateSubnetTwo") | .OutputValue' infrastructure-outputs.json)
+#          ECS_CLUSTER_NAME: $(jq -r '.[] | select(.OutputKey=="ECSCluster") | .OutputValue' infrastructure-outputs.json)
+#          PUBLIC_LOAD_BALANCER: $(jq -r '.[] | select(.OutputKey=="PublicLoadBalancer") | .OutputValue' infrastructure-outputs.json)
+#          PUBLIC_LOAD_BALANCER_SG: $(jq -r '.[] | select(.OutputKey=="PublicLoadBalancerSG") | .OutputValue' infrastructure-outputs.json)
+#          VPCCIDR: $(jq -r '.[] | select(.OutputKey=="VPCCIDR") | .OutputValue' infrastructure-outputs.json)
 #          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
 #          MYSQL_USER: ${{ secrets.MYSQL_USER }}
 #          MYSQL_ROOT_USER: ${{ secrets.MYSQL_ROOT_USER }}
@@ -56,11 +61,15 @@
 #          KONG_CONFIG_BUCKET: kong-config-${{ github.sha }}
 #        run: |
 #          aws cloudformation deploy \
-#            --template-file  cloudformation-template-deps.yaml \
+#            --template-file cloudformation-template-deps.yaml \
 #            --stack-name microservices-stack \
 #            --parameter-overrides \
 #              VPC=${VPC_ID} \
-#              Subnets=${SUBNET_1},${SUBNET_2} \
+#              VPCCIDR=${VPCCIDR} \
+#              PublicSubnets=${PUBLIC_SUBNET_1},${PUBLIC_SUBNET_2} \
+#              PrivateSubnets=${PRIVATE_SUBNET_1},${PRIVATE_SUBNET_2} \
+#              PublicLoadBalancer=${PUBLIC_LOAD_BALANCER} \
+#              PublicLoadBalancerSg=${PUBLIC_LOAD_BALANCER_SG} \
 #              ECSClusterName=${ECS_CLUSTER_NAME} \
 #              MySQLRootPassword=${MYSQL_ROOT_PASSWORD} \
 #              MySQLUser=${MYSQL_USER} \

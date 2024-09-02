@@ -230,6 +230,18 @@ Outputs:
   PrivateSubnetTwo:
     Description: Private subnet two
     Value: !Ref 'PrivateSubnetTwo'
+  ECSCluster:
+    Description: ECS Cluster for services
+    Value: !Ref ECSCluster
+  VPCCIDR:
+    Description: CIDR of the VPC
+    Value: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+  PublicLoadBalancer:
+    Description: Load Balancer defined in the Public subnets
+    Value: !Ref 'PublicLoadBalancer'
+  PublicLoadBalancerSG:
+    Description: Public load balancer sg
+    Value: !Ref 'PublicLoadBalancerSG'
   ExternalUrl:
     Description: The url of the external load balancer
     Value: !Sub http://${PublicLoadBalancer.DNSName}

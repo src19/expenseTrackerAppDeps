@@ -4,7 +4,9 @@ Description: 'Autoscaling group for microservices with Kong, MySQL, and Kafka'
 Parameters:
   VPC:
     Type: AWS::EC2::VPC::Id
-  Subnets:
+  PublicSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+  PrivateSubnets:
     Type: List<AWS::EC2::Subnet::Id>
   InstanceType:
     Type: String
@@ -30,6 +32,15 @@ Parameters:
   ECSClusterName:
     Type: String
     Description: Name of the ECS Cluster
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Description: Load Balancer to use while deployment
+  PublicLoadBalancerSg:
+    Type: AWS::EC2::SecurityGroup
+    Description: Load Balancer SG
+  VPCCIDR:
+    Type: String
+    Description: CIDR of VPC
 
 Resources:
   ServiceDiscoveryNamespace:
@@ -110,7 +121,7 @@ Resources:
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
       ContainerDefinitions:
         - Name: kong
-          Image: !Ref kong:latest
+          Image: kong:latest
           Essential: true
           PortMappings:
             - ContainerPort: 8000
@@ -229,9 +240,9 @@ Resources:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups: [!Ref EC2SecurityGroup]
-          Subnets: !Ref Subnets
+          Subnets: !Ref PrivateSubnets
       LoadBalancers:
         - TargetGroupArn: !Ref KongTargetGroup
           ContainerName: kong
@@ -246,9 +257,9 @@ Resources:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups: [!Ref EC2SecurityGroup]
-          Subnets: !Ref Subnets
+          Subnets: !Ref PrivateSubnets
 
   KafkaService:
     Type: AWS::ECS::Service
@@ -259,9 +270,9 @@ Resources:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups: [!Ref EC2SecurityGroup]
-          Subnets: !Ref Subnets
+          Subnets: !Ref PrivateSubnets
 
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -273,11 +284,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: 8000
           ToPort: 8000
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !GetAtt PublicLoadBalancerSG.GroupId
         - IpProtocol: tcp
           FromPort: 8443
           ToPort: 8443
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !GetAtt PublicLoadBalancerSG.GroupId
 
         # Restrict MySQL access to internal subnets
         - IpProtocol: tcp
@@ -308,7 +319,7 @@ Resources:
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier: !Ref Subnets
+      VPCZoneIdentifier: !Ref PrivateSubnets
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
