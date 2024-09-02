@@ -287,41 +287,41 @@ Resources:
     Properties:
       GroupDescription: Security group for EC2 instances
       VpcId: !Ref VPC
-    SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 8000
-        ToPort: 8000
-        SourceSecurityGroupId: !Ref PublicLoadBalancerSg
-      - IpProtocol: tcp
-        FromPort: 8443
-        ToPort: 8443
-        SourceSecurityGroupId: !Ref PublicLoadBalancerSg
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          SourceSecurityGroupId: !Ref PublicLoadBalancerSg
+        - IpProtocol: tcp
+          FromPort: 8443
+          ToPort: 8443
+          SourceSecurityGroupId: !Ref PublicLoadBalancerSg
 
       # Restrict MySQL access to internal subnets
-      - IpProtocol: tcp
-        FromPort: 3306
-        ToPort: 3306
-        CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: !Ref VPCCIDR
 
       # Restrict Kafka and Zookeeper access to internal subnets
-      - IpProtocol: tcp
-        FromPort: 9092
-        ToPort: 9092
-        CidrIp: !Ref VPCCIDR
-      - IpProtocol: tcp
-        FromPort: 2181
-        ToPort: 2181
-        CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 9092
+          ToPort: 9092
+          CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 2181
+          ToPort: 2181
+          CidrIp: !Ref VPCCIDR
 
       # DNS (TCP and UDP) restricted to internal subnets
-      - IpProtocol: udp
-        FromPort: 53
-        ToPort: 53
-        CidrIp: !Ref VPCCIDR
-      - IpProtocol: tcp
-        FromPort: 53
-        ToPort: 53
-        CidrIp: !Ref VPCCIDR
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: !Ref VPCCIDR
 
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
