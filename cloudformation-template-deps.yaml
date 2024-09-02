@@ -147,13 +147,13 @@ Resources:
               Value: "/dev/stderr"
             - Name: KONG_ADMIN_LISTEN
               Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
-          Volumes:
-            - Name: kong-config
-              Host:
-                SourcePath: /app/kong/config
-            - Name: custom-plugins
-              Host:
-                SourcePath: /app/kong/custom-plugins
+          Command:
+            - /bin/sh
+            - -c
+            - |
+              aws s3 cp s3://$KongConfigBucket/kong.yml /usr/local/kong/declarative/kong.yml
+              aws s3 cp s3://$KongConfigBucket/custom-plugins /usr/local/kong/custom-plugins --recursive
+              kong start
 
   MySQLTaskDefinition:
     Type: AWS::ECS::TaskDefinition
