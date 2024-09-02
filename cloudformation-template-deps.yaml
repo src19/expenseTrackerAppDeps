@@ -287,16 +287,15 @@ Resources:
     Properties:
       GroupDescription: Security group for EC2 instances
       VpcId: !Ref VPC
-      SecurityGroupIngress:
-        # Allow Kong Proxy access from any IP
+    SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8000
           ToPort: 8000
-          SourceSecurityGroupId: !GetAtt PublicLoadBalancerSG.GroupId
+          SourceSecurityGroupId: !Ref PublicLoadBalancerSg
         - IpProtocol: tcp
           FromPort: 8443
           ToPort: 8443
-          SourceSecurityGroupId: !GetAtt PublicLoadBalancerSG.GroupId
+          SourceSecurityGroupId: !Ref PublicLoadBalancerSg
 
         # Restrict MySQL access to internal subnets
         - IpProtocol: tcp
