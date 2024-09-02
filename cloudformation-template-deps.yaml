@@ -261,6 +261,14 @@ Resources:
           SecurityGroups: [!Ref EC2SecurityGroup]
           Subnets: !Ref PrivateSubnets
 
+  LaunchTemplate:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - [!Ref EC2SecurityGroup]
+
   KafkaService:
     Type: AWS::ECS::Service
     Properties:
