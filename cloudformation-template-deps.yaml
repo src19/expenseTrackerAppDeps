@@ -353,8 +353,6 @@ Resources:
   # Update ALB Listener
   PublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn:
-      - PublicLoadBalancer
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref KongTargetGroup
