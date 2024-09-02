@@ -347,6 +347,7 @@ Resources:
       Port: 8000
       Protocol: HTTP
       VpcId: !Ref VPC
+      TargetType: ip
 
   # Update ALB Listener
   PublicLoadBalancerListener:
