@@ -33,10 +33,10 @@ Parameters:
     Type: String
     Description: Name of the ECS Cluster
   PublicLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Type: String
     Description: Load Balancer to use while deployment
   PublicLoadBalancerSg:
-    Type: AWS::EC2::SecurityGroup
+    Type: AWS::EC2::SecurityGroup::Id
     Description: Load Balancer SG
   VPCCIDR:
     Type: String
