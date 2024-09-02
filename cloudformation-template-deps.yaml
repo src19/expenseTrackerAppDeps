@@ -267,7 +267,7 @@ Resources:
       ImageId: !Ref AMI
       InstanceType: !Ref InstanceType
       SecurityGroups:
-        - [!Ref EC2SecurityGroup]
+        - !Ref EC2SecurityGroup
 
   KafkaService:
     Type: AWS::ECS::Service
