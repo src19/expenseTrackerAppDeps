@@ -132,6 +132,12 @@ Resources:
               HostPort: 8001
             - ContainerPort: 8444
               HostPort: 8444
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/kong
+              awslogs-region: ap-south-1
+              awslogs-stream-prefix: kong
           Environment:
             - Name: KONG_DATABASE
               Value: "off"
@@ -165,6 +171,12 @@ Resources:
       Cpu: "256"
       Memory: "512"
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      LogConfiguration:
+        LogDriver: awslogs
+        Options:
+          awslogs-group: /ecs/mysql
+          awslogs-region: ap-south-1
+          awslogs-stream-prefix: mysql
       ContainerDefinitions:
         - Name: mysql
           Image: mysql:8.3.0
@@ -192,6 +204,12 @@ Resources:
       Cpu: "256"
       Memory: "512"
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      LogConfiguration:
+        LogDriver: awslogs
+        Options:
+          awslogs-group: /ecs/kafka
+          awslogs-region: ap-south-1
+          awslogs-stream-prefix: kafka
       ContainerDefinitions:
         - Name: zookeeper
           Image: confluentinc/cp-zookeeper:7.4.4
