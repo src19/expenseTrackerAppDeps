@@ -132,12 +132,6 @@ Resources:
               HostPort: 8001
             - ContainerPort: 8444
               HostPort: 8444
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: /ecs/kong
-              awslogs-region: ap-south-1
-              awslogs-stream-prefix: kong
           Environment:
             - Name: KONG_DATABASE
               Value: "off"
@@ -187,12 +181,6 @@ Resources:
           PortMappings:
             - ContainerPort: 3306
               HostPort: 3306
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: /ecs/mysql
-              awslogs-region: ap-south-1
-              awslogs-stream-prefix: mysql
 
   KafkaTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -216,12 +204,6 @@ Resources:
           PortMappings:
             - ContainerPort: 2181
               HostPort: 2181
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: /ecs/zookeeper
-              awslogs-region: ap-south-1
-              awslogs-stream-prefix: zookeeper
         - Name: kafka
           Image: confluentinc/cp-kafka:7.4.4
           Essential: true
@@ -244,13 +226,6 @@ Resources:
           PortMappings:
             - ContainerPort: 9092
               HostPort: 9092
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: /ecs/kafka
-              awslogs-region: ap-south-1
-              awslogs-stream-prefix: kafka
-
   KongService:
     Type: AWS::ECS::Service
     Properties:
