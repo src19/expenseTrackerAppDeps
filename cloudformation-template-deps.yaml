@@ -48,6 +48,23 @@ Resources:
     Properties:
       Name: myapp.local
       Vpc: !Ref VPC
+    KongLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${AWS::StackName}/kong"
+      RetentionInDays: 30
+
+  MySQLLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${AWS::StackName}/mysql"
+      RetentionInDays: 30
+
+  KafkaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${AWS::StackName}/kafka"
+      RetentionInDays: 30
 
   KafkaServiceDiscovery:
     Type: AWS::ServiceDiscovery::Service
@@ -123,6 +140,12 @@ Resources:
         - Name: kong
           Image: kong:latest
           Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref KongLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: kong
           PortMappings:
             - ContainerPort: 8000
               HostPort: 8000
@@ -169,6 +192,12 @@ Resources:
         - Name: mysql
           Image: mysql:8.3.0
           Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref MySQLLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: mysql
           Environment:
             - Name: MYSQL_ROOT_PASSWORD
               Value: !Ref MySQLRootPassword
@@ -196,6 +225,12 @@ Resources:
         - Name: zookeeper
           Image: confluentinc/cp-zookeeper:7.4.4
           Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref KafkaLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: zookeeper
           Environment:
             - Name: ZOOKEEPER_CLIENT_PORT
               Value: "2181"
@@ -207,6 +242,12 @@ Resources:
         - Name: kafka
           Image: confluentinc/cp-kafka:7.4.4
           Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref KafkaLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: kafka
           DependsOn:
             - ContainerName: zookeeper
               Condition: START
