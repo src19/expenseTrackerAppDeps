@@ -123,6 +123,8 @@ Resources:
                   - ecr:BatchCheckLayerAvailability
                   - logs:CreateLogStream
                   - logs:PutLogEvents
+                  - logs:DeleteLogGroup
+                  - logs:PutRetentionPolicy
                   - s3:GetObject
                 Resource: "*"
 
