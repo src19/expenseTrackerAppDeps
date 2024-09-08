@@ -48,7 +48,7 @@ Resources:
     Properties:
       Name: myapp.local
       Vpc: !Ref VPC
-    KongLogGroup:
+  KongLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/ecs/${AWS::StackName}/kong"
