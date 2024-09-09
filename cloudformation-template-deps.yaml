@@ -176,6 +176,7 @@ Resources:
             - /bin/sh
             - -c
             - |
+              apt-get update && apt-get install -y awscli
               aws s3 cp s3://$KongConfigBucket/kong.yml /usr/local/kong/declarative/kong.yml
               aws s3 cp s3://$KongConfigBucket/custom-plugins /usr/local/kong/custom-plugins --recursive
               kong start
@@ -203,12 +204,6 @@ Resources:
           Environment:
             - Name: MYSQL_ROOT_PASSWORD
               Value: !Ref MySQLRootPassword
-            - Name: MYSQL_USER
-              Value: !Ref MySQLUser
-            - Name: MYSQL_ROOT_USER
-              Value: !Ref MySQLRootUser
-            - Name: MYSQL_PASSWORD
-              Value: !Ref MySQLPassword
           PortMappings:
             - ContainerPort: 3306
               HostPort: 3306
@@ -257,7 +252,7 @@ Resources:
             - Name: KAFKA_BROKER_ID
               Value: "1"
             - Name: KAFKA_ZOOKEEPER_CONNECT
-              Value: "zookeeper:2181"
+              Value: "zookeeper.myapp.local:2181"
             - Name: KAFKA_ADVERTISED_LISTENERS
               Value: !Ref KafkaAdvertisedListeners
             - Name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
