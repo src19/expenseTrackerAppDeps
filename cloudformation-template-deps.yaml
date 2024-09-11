@@ -111,6 +111,9 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
       Policies:
         - PolicyName: ecsTaskExecutionRole
           PolicyDocument:
@@ -305,7 +308,7 @@ Resources:
         SecurityGroupIds:
           - !Ref EC2SecurityGroup
         IamInstanceProfile: 
-          Arn: !GetAtt EC2InstanceProfile.Arn
+          Arn: !GetAtt TaskExecutionRole.Arn
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
