@@ -134,10 +134,11 @@ Resources:
       Family: kong-task
       NetworkMode: awsvpc
       RequiresCompatibilities:
-        - FARGATE
+        - EC2
       Cpu: "512"
       Memory: "1024"
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !Ref TaskExecutionRole
       ContainerDefinitions:
         - Name: kong
           Image: kong:latest
@@ -270,7 +271,7 @@ Resources:
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref KongTaskDefinition
       DesiredCount: 1
-      LaunchType: FARGATE
+      LaunchType: EC2
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -303,6 +304,12 @@ Resources:
         InstanceType: !Ref InstanceType
         SecurityGroupIds:
           - !Ref EC2SecurityGroup
+        IamInstanceProfile: 
+          Arn: !GetAtt EC2InstanceProfile.Arn
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
 
   KafkaService:
     Type: AWS::ECS::Service
