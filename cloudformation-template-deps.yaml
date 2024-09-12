@@ -165,6 +165,8 @@ Resources:
               Value: "/usr/local/kong/declarative/kong.yml"
             - Name: KONG_PROXY_ACCESS_LOG
               Value: "/dev/stdout"
+            - Name: KONG_PROXY_LISTEN
+              Value: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
             - Name: KONG_ADMIN_ACCESS_LOG
               Value: "/dev/stdout"
             - Name: KONG_PROXY_ERROR_LOG
@@ -173,6 +175,13 @@ Resources:
               Value: "/dev/stderr"
             - Name: KONG_ADMIN_LISTEN
               Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - kong health
+            Interval: 30
+            Timeout: 5
+            Retries: 3
           Command:
             - /bin/sh
             - -c
@@ -253,7 +262,7 @@ Resources:
             - Name: KAFKA_BROKER_ID
               Value: "1"
             - Name: KAFKA_ZOOKEEPER_CONNECT
-              Value: "zookeeper.myapp.local:2181"
+              Value: "localhost:2181"
             - Name: KAFKA_ADVERTISED_LISTENERS
               Value: !Ref KafkaAdvertisedListeners
             - Name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
@@ -277,6 +286,8 @@ Resources:
           AssignPublicIp: DISABLED
           SecurityGroups: [!Ref EC2SecurityGroup]
           Subnets: !Ref PrivateSubnets
+      ServiceRegistries:
+        - RegistryArn: !GetAtt KongServiceDiscovery.Arn
       LoadBalancers:
         - TargetGroupArn: !Ref KongTargetGroup
           ContainerName: kong
@@ -312,6 +323,8 @@ Resources:
       TaskDefinition: !Ref KafkaTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
+      ServiceRegistries:
+        - RegistryArn: !GetAtt KafkaServiceDiscovery.Arn
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
