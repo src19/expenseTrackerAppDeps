@@ -175,13 +175,6 @@ Resources:
               Value: "/dev/stderr"
             - Name: KONG_ADMIN_LISTEN
               Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
-          HealthCheck:
-            Command:
-              - CMD-SHELL
-              - kong health
-            Interval: 30
-            Timeout: 5
-            Retries: 3
           Command:
             - /bin/sh
             - -c
