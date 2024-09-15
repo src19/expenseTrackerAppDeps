@@ -178,7 +178,7 @@ Resources:
             - Name: KongConfigBucket
               Value: !Ref KongConfigBucket
           Command:
-            - "/bin/sh"
+            - "/bin/bash"
             - "-c"
             - |
               mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
