@@ -395,7 +395,7 @@ Resources:
         - TargetGroupArn: !Ref KongTargetGroup
           Type: 'forward'
       LoadBalancerArn: !Ref PublicLoadBalancer
-      Port: 80
+      Port: 8080
       Protocol: HTTP
 
 Outputs:
