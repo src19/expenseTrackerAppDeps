@@ -182,7 +182,7 @@ Resources:
             - "-c"
             - |
               apt-get update && apt-get install -y awscli
-              mkdir -p /usr/local/kong/declarative /usr/local/kong/plugins/custom-auth
+              mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
               aws s3 cp s3://${KongConfigBucket}/kong.yml /usr/local/kong/declarative/kong.yml
               aws s3 cp s3://${KongConfigBucket}/custom-auth/ /usr/local/share/lua/5.1/kong/plugins/custom-auth/ --recursive
               kong start
