@@ -126,14 +126,13 @@ Resources:
                   - logs:PutLogEvents
                   - s3:GetObject
                 Resource: "*"
-
   KongTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: kong-task
       NetworkMode: awsvpc
       RequiresCompatibilities:
-        - FARGATE 
+        - FARGATE
       Cpu: "512"
       Memory: "1024"
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
@@ -149,10 +148,10 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: kong
           PortMappings:
-            - ContainerPort: 8000
-            - ContainerPort: 8443
-            - ContainerPort: 8001
-            - ContainerPort: 8444
+            - ContainerPort: 8000  # Public proxy port
+            - ContainerPort: 8443  # SSL proxy port
+            - ContainerPort: 8001  # Admin port
+            - ContainerPort: 8444  # Admin SSL port
           Environment:
             - Name: KONG_DATABASE
               Value: "off"
@@ -160,22 +159,20 @@ Resources:
               Value: "/usr/local/kong/declarative/kong.yml"
             - Name: KONG_PROXY_ACCESS_LOG
               Value: "/dev/stdout"
-            - Name: KONG_PROXY_LISTEN
-              Value: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
-            - Name: KONG_NGINX_WORKER_PROCESSES
-              Value: "1"
-            - Name: KONG_NGINX_WORKER_CONNECTIONS
-              Value: "128"
             - Name: KONG_ADMIN_ACCESS_LOG
               Value: "/dev/stdout"
             - Name: KONG_PROXY_ERROR_LOG
               Value: "/dev/stderr"
             - Name: KONG_ADMIN_ERROR_LOG
               Value: "/dev/stderr"
-            - Name: KONG_PLUGINS
-              Value: "custom-auth"
             - Name: KONG_ADMIN_LISTEN
               Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+            - Name: KONG_LOG_LEVEL
+              Value: "debug"
+            - Name: KONG_PLUGINS
+              Value: "custom-auth"
+            - Name: KONG_LUA_PACKAGE_PATH
+              Value: "/usr/local/share/lua/5.1/?.lua;;"
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: KongConfigBucket
@@ -184,6 +181,7 @@ Resources:
             - "/bin/sh"
             - "-c"
             - |
+              apt-get update && apt-get install -y awscli
               mkdir -p /usr/local/kong/declarative /usr/local/kong/plugins/custom-auth
               aws s3 cp s3://${KongConfigBucket}/kong.yml /usr/local/kong/declarative/kong.yml
               aws s3 cp s3://${KongConfigBucket}/custom-auth/ /usr/local/kong/plugins/custom-auth/ --recursive
