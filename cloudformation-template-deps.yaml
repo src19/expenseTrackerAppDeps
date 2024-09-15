@@ -169,6 +169,8 @@ Resources:
               Value: "/dev/stderr"
             - Name: KONG_ADMIN_ERROR_LOG
               Value: "/dev/stderr"
+            - Name: KONG_PLUGINS
+              Value: "custom-auth"
             - Name: KONG_ADMIN_LISTEN
               Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
             - Name: AWS_REGION
@@ -176,12 +178,12 @@ Resources:
             - Name: KongConfigBucket
               Value: !Ref KongConfigBucket
           Command:
-            - /bin/sh
-            - -c
+            - "/bin/sh"
+            - "-c"
             - |
-              apk add --no-cache aws-cli
-              aws s3 cp s3://$KongConfigBucket/kong.yml /usr/local/kong/declarative/kong.yml
-              aws s3 cp s3://$KongConfigBucket/custom-plugins /usr/local/kong/custom-plugins --recursive
+              mkdir -p /usr/local/kong/declarative /usr/local/kong/plugins/custom-auth
+              aws s3 cp s3://${KongConfigBucket}/kong.yml /usr/local/kong/declarative/kong.yml
+              aws s3 cp s3://${KongConfigBucket}/custom-auth/ /usr/local/kong/plugins/custom-auth/ --recursive
               kong start
 
   MySQLTaskDefinition:
