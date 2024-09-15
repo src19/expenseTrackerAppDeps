@@ -124,7 +124,6 @@ Resources:
                   - ecr:BatchCheckLayerAvailability
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                  - logs:PutRetentionPolicy
                   - s3:GetObject
                 Resource: "*"
 
@@ -134,9 +133,9 @@ Resources:
       Family: kong-task
       NetworkMode: awsvpc
       RequiresCompatibilities:
-        - EC2
-      Cpu: "256"
-      Memory: "512"
+        - FARGATE 
+      Cpu: "512"
+      Memory: "1024"
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
       TaskRoleArn: !Ref TaskExecutionRole
       ContainerDefinitions:
@@ -287,7 +286,7 @@ Resources:
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref KongTaskDefinition
       DesiredCount: 1
-      LaunchType: EC2
+      LaunchType: FARGATE 
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
