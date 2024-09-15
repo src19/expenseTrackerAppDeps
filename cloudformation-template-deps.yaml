@@ -185,6 +185,12 @@ Resources:
               mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
               aws s3 cp s3://${KongConfigBucket}/kong.yml /usr/local/kong/declarative/kong.yml
               aws s3 cp s3://${KongConfigBucket}/custom-auth/ /usr/local/share/lua/5.1/kong/plugins/custom-auth/ --recursive
+              # Check if the custom-auth plugin exists
+              if [ ! -f /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua ]; then
+                echo "Custom-auth plugin not found!"
+                exit 1
+              fi
+              kong migrations bootstrap
               kong start
 
   MySQLTaskDefinition:
