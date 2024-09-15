@@ -13,6 +13,7 @@ Parameters:
     Default: t3.medium
   AMI:
     Type: AWS::EC2::Image::Id
+    Description: ECS-optimized AMI ID
   MySQLRootPassword:
     Type: String
     NoEcho: true
@@ -25,7 +26,7 @@ Parameters:
     NoEcho: true
   KafkaAdvertisedListeners:
     Type: String
-    Default: PLAINTEXT://localhost:9092
+    Default: PLAINTEXT://kafka.myapp.local:9092
   KongConfigBucket:
     Type: String
     Description: S3 bucket containing Kong configuration and plugins
@@ -34,10 +35,10 @@ Parameters:
     Description: Name of the ECS Cluster
   PublicLoadBalancer:
     Type: String
-    Description: Load Balancer to use while deployment
+    Description: Load Balancer ARN to use during deployment
   PublicLoadBalancerSg:
     Type: AWS::EC2::SecurityGroup::Id
-    Description: Load Balancer SG
+    Description: Load Balancer Security Group ID
   VPCCIDR:
     Type: String
     Description: CIDR of VPC
@@ -123,7 +124,6 @@ Resources:
                   - ecr:BatchCheckLayerAvailability
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                  - logs:DeleteLogGroup
                   - logs:PutRetentionPolicy
                   - s3:GetObject
                 Resource: "*"
@@ -151,13 +151,9 @@ Resources:
               awslogs-stream-prefix: kong
           PortMappings:
             - ContainerPort: 8000
-              HostPort: 8000
             - ContainerPort: 8443
-              HostPort: 8443
             - ContainerPort: 8001
-              HostPort: 8001
             - ContainerPort: 8444
-              HostPort: 8444
           Environment:
             - Name: KONG_DATABASE
               Value: "off"
@@ -175,11 +171,15 @@ Resources:
               Value: "/dev/stderr"
             - Name: KONG_ADMIN_LISTEN
               Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: KongConfigBucket
+              Value: !Ref KongConfigBucket
           Command:
             - /bin/sh
             - -c
             - |
-              apt-get update && apt-get install -y awscli
+              apk add --no-cache aws-cli
               aws s3 cp s3://$KongConfigBucket/kong.yml /usr/local/kong/declarative/kong.yml
               aws s3 cp s3://$KongConfigBucket/custom-plugins /usr/local/kong/custom-plugins --recursive
               kong start
@@ -196,7 +196,7 @@ Resources:
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
       ContainerDefinitions:
         - Name: mysql
-          Image: mysql:8.3.0
+          Image: mysql:8.0
           Essential: true
           LogConfiguration:
             LogDriver: awslogs
@@ -209,7 +209,6 @@ Resources:
               Value: !Ref MySQLRootPassword
           PortMappings:
             - ContainerPort: 3306
-              HostPort: 3306
 
   KafkaTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -219,7 +218,7 @@ Resources:
       RequiresCompatibilities:
         - FARGATE
       Cpu: "512"
-      Memory: "1024"
+      Memory: "2048"
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
       ContainerDefinitions:
         - Name: zookeeper
@@ -238,7 +237,6 @@ Resources:
               Value: "2000"
           PortMappings:
             - ContainerPort: 2181
-              HostPort: 2181
         - Name: kafka
           Image: confluentinc/cp-kafka:7.4.4
           Essential: true
@@ -257,16 +255,14 @@ Resources:
             - Name: KAFKA_ZOOKEEPER_CONNECT
               Value: "localhost:2181"
             - Name: KAFKA_ADVERTISED_LISTENERS
-              Value: !Ref KafkaAdvertisedListeners
+              Value: "PLAINTEXT://kafka.myapp.local:9092"
             - Name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              Value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
-            - Name: KAFKA_INTER_BROKER_LISTENER_NAME
-              Value: "PLAINTEXT"
+              Value: "PLAINTEXT:PLAINTEXT"
             - Name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               Value: "1"
           PortMappings:
             - ContainerPort: 9092
-              HostPort: 9092
+
   KongService:
     Type: AWS::ECS::Service
     Properties:
@@ -298,6 +294,23 @@ Resources:
           AssignPublicIp: DISABLED
           SecurityGroups: [!Ref EC2SecurityGroup]
           Subnets: !Ref PrivateSubnets
+      ServiceRegistries:
+        - RegistryArn: !GetAtt MySQLServiceDiscovery.Arn
+
+  KafkaService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref KafkaTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: [!Ref EC2SecurityGroup]
+          Subnets: !Ref PrivateSubnets
+      ServiceRegistries:
+        - RegistryArn: !GetAtt KafkaServiceDiscovery.Arn
 
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
@@ -308,26 +321,15 @@ Resources:
         InstanceType: !Ref InstanceType
         SecurityGroupIds:
           - !Ref EC2SecurityGroup
-
-  KafkaService:
-    Type: AWS::ECS::Service
-    Properties:
-      Cluster: !Ref ECSCluster
-      TaskDefinition: !Ref KafkaTaskDefinition
-      DesiredCount: 1
-      LaunchType: FARGATE
-      ServiceRegistries:
-        - RegistryArn: !GetAtt KafkaServiceDiscovery.Arn
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
-          SecurityGroups: [!Ref EC2SecurityGroup]
-          Subnets: !Ref PrivateSubnets
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            echo ECS_CLUSTER=${ECSClusterName} >> /etc/ecs/ecs.config
 
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security group for EC2 instances
+      GroupDescription: Security group for ECS EC2 instances
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -338,14 +340,10 @@ Resources:
           FromPort: 8443
           ToPort: 8443
           SourceSecurityGroupId: !Ref PublicLoadBalancerSg
-
-      # Restrict MySQL access to internal subnets
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
           CidrIp: !Ref VPCCIDR
-
-      # Restrict Kafka and Zookeeper access to internal subnets
         - IpProtocol: tcp
           FromPort: 9092
           ToPort: 9092
@@ -354,8 +352,6 @@ Resources:
           FromPort: 2181
           ToPort: 2181
           CidrIp: !Ref VPCCIDR
-
-      # DNS (TCP and UDP) restricted to internal subnets
         - IpProtocol: udp
           FromPort: 53
           ToPort: 53
@@ -378,7 +374,6 @@ Resources:
       HealthCheckType: EC2
       HealthCheckGracePeriod: 300
 
-  # Target Group for Kong
   KongTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -393,7 +388,6 @@ Resources:
       VpcId: !Ref VPC
       TargetType: ip
 
-  # Update ALB Listener
   PublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -401,7 +395,7 @@ Resources:
         - TargetGroupArn: !Ref KongTargetGroup
           Type: 'forward'
       LoadBalancerArn: !Ref PublicLoadBalancer
-      Port: 8000
+      Port: 80
       Protocol: HTTP
 
 Outputs:
