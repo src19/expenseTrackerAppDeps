@@ -178,14 +178,14 @@ Resources:
             - Name: KongConfigBucket
               Value: !Ref KongConfigBucket
           Command:
-            - "/bin/bash"
+            - "/bin/sh"
             - "-c"
             - |
+              apk add --no-cache curl
               mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
               curl -o /usr/local/kong/declarative/kong.yml https://${KongConfigBucket}.s3.${AWS::Region}.amazonaws.com/kong.yml
               curl -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua https://${KongConfigBucket}.s3.${AWS::Region}.amazonaws.com/custom-auth/handler.lua
               curl -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/schema.lua https://${KongConfigBucket}.s3.${AWS::Region}.amazonaws.com/custom-auth/schema.lua
-              # Check if the custom-auth plugin exists
               if [ ! -f /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua ]; then
                 echo "Custom-auth plugin not found!"
                 exit 1
