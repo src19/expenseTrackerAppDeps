@@ -184,12 +184,19 @@ Resources:
             - "-c"
             - |
               set -e
-              apt-get update
-              apt-get install -y curl
               mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
-              curl -fsSL -o /usr/local/kong/declarative/kong.yml https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/kong.yml
-              curl -fsSL -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/handler.lua
-              curl -fsSL -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/schema.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/schema.lua
+              if command -v curl >/dev/null 2>&1; then
+                curl -fsSL -o /usr/local/kong/declarative/kong.yml https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/kong.yml
+                curl -fsSL -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/handler.lua
+                curl -fsSL -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/schema.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/schema.lua
+              elif command -v wget >/dev/null 2>&1; then
+                wget -q -O /usr/local/kong/declarative/kong.yml https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/kong.yml
+                wget -q -O /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/handler.lua
+                wget -q -O /usr/local/share/lua/5.1/kong/plugins/custom-auth/schema.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/schema.lua
+              else
+                echo "Neither curl nor wget is available. Cannot download configuration files."
+                exit 1
+              fi
               if [ ! -f /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua ]; then
                 echo "Custom-auth plugin not found!"
                 exit 1
