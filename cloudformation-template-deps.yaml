@@ -178,7 +178,7 @@ Resources:
             - Name: KONG_CONFIG_BUCKET
               Value: !Ref KongConfigBucket
             - Name: AWS_DEFAULT_REGION
-            Value: !Ref AWS::Region
+              Value: !Ref AWS::Region
           Command:
             - "/bin/sh"
             - "-c"
