@@ -127,46 +127,50 @@ Resources:
                   - s3:GetObject
                 Resource: "*"
   KongTaskDefinition:
-  Type: AWS::ECS::TaskDefinition
-  Properties:
-    Family: kong-task
-    NetworkMode: awsvpc
-    RequiresCompatibilities:
-      - FARGATE
-    Cpu: "512"
-    Memory: "1024"
-    ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
-    TaskRoleArn: !Ref TaskExecutionRole
-    ContainerDefinitions:
-      - Name: kong
-        Image: !Ref KongImage
-        Essential: true
-        LogConfiguration:
-          LogDriver: awslogs
-          Options:
-            awslogs-group: !Ref KongLogGroup
-            awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: kong
-        PortMappings:
-          - ContainerPort: 8000  # Public proxy port
-          - ContainerPort: 8443  # SSL proxy port
-          - ContainerPort: 8001  # Admin port
-          - ContainerPort: 8444  # Admin SSL port
-        Environment:
-          - Name: KONG_DATABASE
-            Value: "off"
-          - Name: KONG_PROXY_ACCESS_LOG
-            Value: "/dev/stdout"
-          - Name: KONG_ADMIN_ACCESS_LOG
-            Value: "/dev/stdout"
-          - Name: KONG_PROXY_ERROR_LOG
-            Value: "/dev/stderr"
-          - Name: KONG_ADMIN_ERROR_LOG
-            Value: "/dev/stderr"
-          - Name: KONG_ADMIN_LISTEN
-            Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
-          - Name: KONG_LOG_LEVEL
-            Value: "debug"
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kong-task
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: "512"
+      Memory: "1024"
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !Ref TaskExecutionRole
+      ContainerDefinitions:
+        - Name: kong
+          Image: !Ref KongImage
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref KongLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: kong
+          PortMappings:
+            - ContainerPort: 8000
+            - ContainerPort: 8443
+            - ContainerPort: 8001
+            - ContainerPort: 8444
+          Environment:
+            - Name: KONG_DATABASE
+              Value: "off"
+            - Name: KONG_PLUGINS
+              Value: "bundled,custom-auth"
+            - Name: KONG_PLUGINSERVER_NAMES
+              Value: "custom-auth"
+            - Name: KONG_PROXY_ACCESS_LOG
+              Value: "/dev/stdout"
+            - Name: KONG_ADMIN_ACCESS_LOG
+              Value: "/dev/stdout"
+            - Name: KONG_PROXY_ERROR_LOG
+              Value: "/dev/stderr"
+            - Name: KONG_ADMIN_ERROR_LOG
+              Value: "/dev/stderr"
+            - Name: KONG_ADMIN_LISTEN
+              Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+            - Name: KONG_LOG_LEVEL
+              Value: "debug"
 
   MySQLTaskDefinition:
     Type: AWS::ECS::TaskDefinition
