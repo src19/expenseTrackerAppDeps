@@ -184,6 +184,8 @@ Resources:
             - "-c"
             - |
               set -e
+              apt-get update
+              apt-get install -y curl
               mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
               curl -fsSL -o /usr/local/kong/declarative/kong.yml https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/kong.yml
               curl -fsSL -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/handler.lua
