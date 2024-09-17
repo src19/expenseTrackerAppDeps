@@ -24,7 +24,7 @@ jobs:
 
       - name: Upload Kong config and plugins to S3
         run: |
-          BUCKET_NAME="kong-config-${{github.sha}}"
+          BUCKET_NAME="kong-config"
           if ! aws s3api head-bucket --bucket "$BUCKET_NAME"; then
             aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
           else
@@ -82,7 +82,7 @@ jobs:
               MySQLPassword=${{ secrets.MYSQL_PASSWORD }} \
               AMI=${{ secrets.AMI_ID }} \
               KongImage=${{ steps.build-kong.outputs.kong_image }} \
-              KongConfigBucket=kong-config-${{ github.sha }} \
+              KongConfigBucket=kong-config \
             --capabilities CAPABILITY_NAMED_IAM
 
       - name: Output Microservices Stack Info
