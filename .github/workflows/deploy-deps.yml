@@ -7,8 +7,6 @@ on:
 
 env:
   AWS_REGION: ap-south-1
-  ECR_REGISTRY: 058264395033.dkr.ecr.ap-south-1.amazonaws.com
-  KONG_IMAGE: kong:latest
 
 jobs:
   deploy-microservices:
@@ -23,19 +21,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: Upload Kong config and plugins to S3
-        run: |
-          BUCKET_NAME="kong-config-${{github.sha}}"
-          if ! aws s3api head-bucket --bucket "$BUCKET_NAME"; then
-            aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
-          else
-            echo "Bucket $BUCKET_NAME already exists"
-          fi
-
-          echo "Uploading Kong configuration and plugins to S3"
-          aws s3 cp kong/config/kong.yml s3://$BUCKET_NAME/kong.yml
-          aws s3 cp kong/custom-plugins s3://$BUCKET_NAME/custom-plugins --recursive
 
       - name: Download infrastructure outputs from S3
         env:
@@ -83,8 +68,6 @@ jobs:
               MySQLRootUser=${{ secrets.MYSQL_ROOT_USER }} \
               MySQLPassword=${{ secrets.MYSQL_PASSWORD }} \
               AMI=${{ secrets.AMI_ID }} \
-              KongImage=${{ env.ECR_REGISTRY }}/${{ env.KONG_IMAGE }} \
-              KongConfigBucket=kong-config-${{ github.sha }} \
             --capabilities CAPABILITY_NAMED_IAM
 
       - name: Output Microservices Stack Info

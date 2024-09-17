@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Autoscaling group for microservices with Kong, MySQL, and Kafka'
+Description: 'Autoscaling group for microservices with Mysql, and Kafka'
 
 Parameters:
   VPC:
@@ -27,9 +27,6 @@ Parameters:
   KafkaAdvertisedListeners:
     Type: String
     Default: PLAINTEXT://kafka.myapp.local:9092
-  KongImage:
-    Type: String
-    Description: ECR URI for Kong image
   ECSClusterName:
     Type: String
     Description: Name of the ECS Cluster
@@ -49,11 +46,6 @@ Resources:
     Properties:
       Name: myapp.local
       Vpc: !Ref VPC
-  KongLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/ecs/${AWS::StackName}/kong"
-      RetentionInDays: 30
 
   MySQLLogGroup:
     Type: AWS::Logs::LogGroup
@@ -87,15 +79,6 @@ Resources:
           - Type: A
             TTL: 300
 
-  KongServiceDiscovery:
-    Type: AWS::ServiceDiscovery::Service
-    Properties:
-      Name: kong
-      NamespaceId: !Ref ServiceDiscoveryNamespace
-      DnsConfig:
-        DnsRecords:
-          - Type: A
-            TTL: 300
 
   ECSCluster:
     Type: AWS::ECS::Cluster
@@ -126,51 +109,6 @@ Resources:
                   - logs:PutLogEvents
                   - s3:GetObject
                 Resource: "*"
-  KongTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: kong-task
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      Cpu: "512"
-      Memory: "1024"
-      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
-      TaskRoleArn: !Ref TaskExecutionRole
-      ContainerDefinitions:
-        - Name: kong
-          Image: !Ref KongImage
-          Essential: true
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref KongLogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: kong
-          PortMappings:
-            - ContainerPort: 8000
-            - ContainerPort: 8443
-            - ContainerPort: 8001
-            - ContainerPort: 8444
-          Environment:
-            - Name: KONG_DATABASE
-              Value: "off"
-            - Name: KONG_PLUGINS
-              Value: "bundled,custom-auth"
-            - Name: KONG_PLUGINSERVER_NAMES
-              Value: "custom-auth"
-            - Name: KONG_PROXY_ACCESS_LOG
-              Value: "/dev/stdout"
-            - Name: KONG_ADMIN_ACCESS_LOG
-              Value: "/dev/stdout"
-            - Name: KONG_PROXY_ERROR_LOG
-              Value: "/dev/stderr"
-            - Name: KONG_ADMIN_ERROR_LOG
-              Value: "/dev/stderr"
-            - Name: KONG_ADMIN_LISTEN
-              Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
-            - Name: KONG_LOG_LEVEL
-              Value: "debug"
 
   MySQLTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -262,25 +200,6 @@ Resources:
               Value: "-Xmx256M -Xms256M"
           PortMappings:
             - ContainerPort: 9092
-
-  KongService:
-    Type: AWS::ECS::Service
-    Properties:
-      Cluster: !Ref ECSCluster
-      TaskDefinition: !Ref KongTaskDefinition
-      DesiredCount: 1
-      LaunchType: FARGATE 
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
-          SecurityGroups: [!Ref EC2SecurityGroup]
-          Subnets: !Ref PrivateSubnets
-      ServiceRegistries:
-        - RegistryArn: !GetAtt KongServiceDiscovery.Arn
-      LoadBalancers:
-        - TargetGroupArn: !Ref KongTargetGroup
-          ContainerName: kong
-          ContainerPort: 8000
 
   MySQLService:
     Type: AWS::ECS::Service
@@ -374,29 +293,7 @@ Resources:
       HealthCheckType: EC2
       HealthCheckGracePeriod: 300
 
-  KongTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckIntervalSeconds: 30
-      HealthCheckPath: /
-      HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 5
-      HealthyThresholdCount: 2
-      UnhealthyThresholdCount: 2
-      Port: 8000
-      Protocol: HTTP
-      VpcId: !Ref VPC
-      TargetType: ip
 
-  PublicLoadBalancerListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions:
-        - TargetGroupArn: !Ref KongTargetGroup
-          Type: 'forward'
-      LoadBalancerArn: !Ref PublicLoadBalancer
-      Port: 8080
-      Protocol: HTTP
 
 Outputs:
   AutoScalingGroupName:
@@ -411,6 +308,3 @@ Outputs:
   MySQLServiceEndpoint:
     Description: MySQL Service Endpoint
     Value: mysql.myapp.local
-  KongServiceEndpoint:
-    Description: Kong Service Endpoint
-    Value: kong.myapp.local
