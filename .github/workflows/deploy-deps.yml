@@ -82,7 +82,7 @@ jobs:
               MySQLPassword=${{ secrets.MYSQL_PASSWORD }} \
               AMI=${{ secrets.AMI_ID }} \
               KongImage=${{ steps.build-kong.outputs.kong_image }} \
-              KongConfigBucket=kong-config \
+              KongConfigBucket=kong-config-${{ github.sha }} \
             --capabilities CAPABILITY_NAMED_IAM
 
       - name: Output Microservices Stack Info
