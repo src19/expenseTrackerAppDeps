@@ -156,7 +156,15 @@ Resources:
             - Name: KONG_DATABASE
               Value: "off"
             - Name: KONG_DECLARATIVE_CONFIG
-              Value: "/usr/local/kong/declarative/kong.yml"
+              Value: "https://${KongConfigBucket}.s3.${AWS::Region}.amazonaws.com/kong.yml"
+            - Name: KONG_PLUGINS
+              Value: "bundled,custom-auth"
+            - Name: KONG_PLUGINSERVER_NAMES
+              Value: "custom-auth"
+            - Name: KONG_PLUGINSERVER_CUSTOM_AUTH_QUERY_CMD
+              Value: "https://${KongConfigBucket}.s3.${AWS::Region}.amazonaws.com/custom-auth/handler.lua"
+            - Name: KONG_PLUGINSERVER_CUSTOM_AUTH_START_CMD
+              Value: "https://${KongConfigBucket}.s3.${AWS::Region}.amazonaws.com/custom-auth/schema.lua"
             - Name: KONG_PROXY_ACCESS_LOG
               Value: "/dev/stdout"
             - Name: KONG_ADMIN_ACCESS_LOG
@@ -169,38 +177,11 @@ Resources:
               Value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
             - Name: KONG_LOG_LEVEL
               Value: "debug"
-            - Name: KONG_PLUGINS
-              Value: "custom-auth"
-            - Name: KONG_LUA_PACKAGE_PATH
-              Value: "/usr/local/share/lua/5.1/?.lua;;"
-            - Name: AWS_REGION
-              Value: !Ref AWS::Region
-            - Name: KONG_CONFIG_BUCKET
-              Value: !Ref KongConfigBucket
-            - Name: AWS_DEFAULT_REGION
-              Value: !Ref AWS::Region
           Command:
             - "/bin/sh"
             - "-c"
             - |
               set -e
-              mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
-              if command -v curl >/dev/null 2>&1; then
-                curl -fsSL -o /usr/local/kong/declarative/kong.yml https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/kong.yml
-                curl -fsSL -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/handler.lua
-                curl -fsSL -o /usr/local/share/lua/5.1/kong/plugins/custom-auth/schema.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/schema.lua
-              elif command -v wget >/dev/null 2>&1; then
-                wget -q -O /usr/local/kong/declarative/kong.yml https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/kong.yml
-                wget -q -O /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/handler.lua
-                wget -q -O /usr/local/share/lua/5.1/kong/plugins/custom-auth/schema.lua https://${KONG_CONFIG_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com/custom-auth/schema.lua
-              else
-                echo "Neither curl nor wget is available. Cannot download configuration files."
-                exit 1
-              fi
-              if [ ! -f /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua ]; then
-                echo "Custom-auth plugin not found!"
-                exit 1
-              fi
               kong start
 
   MySQLTaskDefinition:
