@@ -24,7 +24,7 @@ jobs:
 
       - name: Upload Kong config and plugins to S3
         run: |
-          BUCKET_NAME="kong-config"
+          BUCKET_NAME="kong-config-${{github.sha}}"
           if ! aws s3api head-bucket --bucket "$BUCKET_NAME"; then
             aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
           else
