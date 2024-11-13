@@ -12,6 +12,7 @@ function CustomAuthHandler:access(config)
   
   -- Call auth service
   local httpc = http.new()
+  httpc:set_timeouts(10000, 10000, 10000)
   local res, err = httpc:request_uri(auth_service_url, {
     method = "GET",
     headers = {
