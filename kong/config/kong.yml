@@ -3,7 +3,7 @@ _transform: true
 
 services:
   - name: expense-service
-    url: http://expense-service.myapp.local:9820
+    url: http://expense-service.local:9820
     routes:
       - name: expense-route
         paths:
@@ -13,10 +13,10 @@ services:
     plugins:
       - name: custom-auth
         config:
-          auth_service_url: "http://auth-service.myapp.local:9898/auth/v1/ping"
+          auth_service_url: "http://auth-service.local:9898/auth/v1/ping"
 
   - name: auth-service
-    url: http://auth-service.myapp.local:9898
+    url: http://auth-service.local:9898
     routes:
       - name: auth-route
         paths:

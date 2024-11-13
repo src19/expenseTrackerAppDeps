@@ -9,9 +9,12 @@ RUN apt-get update && apt-get install -y curl && apt-get clean
 # Create necessary directories
 RUN mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
 
-# Copy custom plugin files (you'll need to have these files in a 'custom-plugins' directory)
+# Copy custom plugin files
 COPY custom-plugins/custom-auth/handler.lua /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua
 COPY custom-plugins/custom-auth/schema.lua /usr/local/share/lua/5.1/kong/plugins/custom-auth/schema.lua
+
+# Copy the Kong declarative configuration file
+COPY config/kong.yml /usr/local/kong/declarative/kong.yml
 
 # Set permissions
 RUN chown -R kong:kong /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
