@@ -1,41 +1,29 @@
-# Start from the official Kong image
+# syntax=docker/dockerfile:1.4
 FROM --platform=linux/amd64 kong:latest
 
-USER root
+# Set environment variables first
+ENV KONG_DATABASE="off" \
+    KONG_DECLARATIVE_CONFIG="/usr/local/kong/declarative/kong.yml" \
+    KONG_PROXY_ACCESS_LOG="/dev/stdout" \
+    KONG_ADMIN_ACCESS_LOG="/dev/stdout" \
+    KONG_PROXY_ERROR_LOG="/dev/stderr" \
+    KONG_ADMIN_ERROR_LOG="/dev/stderr" \
+    KONG_ADMIN_LISTEN="0.0.0.0:8001, 0.0.0.0:8444 ssl" \
+    KONG_PROXY_LISTEN="0.0.0.0:8000, 0.0.0.0:8443 ssl" \
+    KONG_LOG_LEVEL="debug" \
+    KONG_PLUGINS="bundled,custom-auth" \
+    KONG_LUA_PACKAGE_PATH="/usr/local/share/lua/5.1/?.lua;;" \
+    KONG_DECLARATIVE_CONFIG_STRING="{}" \
+    KONG_NGINX_WORKER_PROCESSES="1" \
+    KONG_NGINX_USER="kong kong" \
+    KONG_NGINX_DAEMON="off"
 
-# Create necessary directories
-RUN mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
+# Copy files directly (Kong will create directories as needed)
+COPY --chown=kong:kong custom-plugins/custom-auth/handler.lua /usr/local/share/lua/5.1/kong/plugins/custom-auth/
+COPY --chown=kong:kong custom-plugins/custom-auth/schema.lua /usr/local/share/lua/5.1/kong/plugins/custom-auth/
+COPY --chown=kong:kong config/kong.yml /usr/local/kong/declarative/
 
-# Copy custom plugin files
-COPY custom-plugins/custom-auth/handler.lua /usr/local/share/lua/5.1/kong/plugins/custom-auth/handler.lua
-COPY custom-plugins/custom-auth/schema.lua /usr/local/share/lua/5.1/kong/plugins/custom-auth/schema.lua
-
-# Copy the Kong declarative configuration file
-COPY config/kong.yml /usr/local/kong/declarative/kong.yml
-
-# Set permissions
-RUN chown -R kong:kong /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
-
-# Set environment variables
-ENV KONG_DATABASE=off
-ENV KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
-ENV KONG_PROXY_ACCESS_LOG=/dev/stdout
-ENV KONG_ADMIN_ACCESS_LOG=/dev/stdout
-ENV KONG_PROXY_ERROR_LOG=/dev/stderr
-ENV KONG_ADMIN_ERROR_LOG=/dev/stderr
-ENV KONG_ADMIN_LISTEN="0.0.0.0:8001, 0.0.0.0:8444 ssl"
-ENV KONG_LOG_LEVEL=debug
-ENV KONG_PLUGINS="bundled,custom-auth"
-ENV KONG_LUA_PACKAGE_PATH="/usr/local/share/lua/5.1/?.lua;;"
-
-# Switch back to the kong user
-USER kong
-
-# Expose ports
 EXPOSE 8000 8443 8001 8444
 
-# Set the entry point
-ENTRYPOINT ["kong"]
-
-# Set the default command
-CMD ["docker-entrypoint.sh", "kong", "docker-start"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["kong", "docker-start"]
