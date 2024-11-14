@@ -1,10 +1,7 @@
 # Start from the official Kong image
-FROM kong:latest
+FROM --platform=linux/amd64 kong:latest
 
 USER root
-
-# Install curl
-RUN apt-get update && apt-get install -y curl && apt-get clean
 
 # Create necessary directories
 RUN mkdir -p /usr/local/kong/declarative /usr/local/share/lua/5.1/kong/plugins/custom-auth
