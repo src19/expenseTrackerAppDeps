@@ -49,4 +49,4 @@ jobs:
          fi
          echo "Uploading Bucket: $BUCKET_NAME"
          aws s3 cp ${INFRA_FILE_NAME} s3://${BUCKET_NAME}/infrastructure-outputs.json
-#dummy
+#dummy2
